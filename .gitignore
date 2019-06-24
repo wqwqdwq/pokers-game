@@ -1,32 +1,381 @@
-# Prerequisites
-*.d
+// 小猫钓鱼 ！！.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
+//
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+// new.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
+//
+#include "pch.h"
+#include<iostream>
+#include<fstream>
+#include<string>
+#include<time.h>
+#include<graphics.h>
+#include <stdio.h>
+#include<conio.h>
+#include <mmsystem.h>
+#pragma comment(lib,"winmm.lib")
+using namespace std;
+int pokerbase[51];//初始牌堆,牌堆里面只含有数字，这些数字用于在可视化时调用图片即可，因此在这里扑克牌无需花色上和大小上的定义，只需要区别52张牌就可以
+int poker1[51];//玩家1初始牌堆
+int poker2[51];//玩家2初始牌堆
+int  end1, end2, end3;//设置三个数起指针作用指示牌的尾部
+class player//玩家类
+{
+public:
+	player();//构造函数，输入玩家名
+	void player_data();//查看玩家数据
+	void player_updata(bool a);//玩家数据更新,参数a为游戏结果
+private:
+	string player_name;//玩家名
+	int player_score = 500;//玩家积分
+	int player_win = 0;//玩家胜场
+	int player_fall = 0;//玩家败场
+};
+player::player()
+{
+	cout << "请输入玩家名:";
+	cin>>player_name;
+}
+void player::player_updata(bool a)
+{
+	if (a == 0)
+	{
+		player_score = player_score - 20;
+		player_fall++;
+	}
+	else
+	{
+		player_score = player_score + 20;
+		player_win++;
+	}//根据单场游戏结果修改玩家数据
+}
+void player::player_data()
+{
+	cout << "玩家名：" << player_name << endl;
+	cout << "玩家积分：" << player_score << endl;
+	cout << "玩家胜场：" << player_win << endl;
+	cout << "玩家败场：" << player_fall << endl;
+}
+void washpokers(int poker_[51], int end_);//定义洗牌函数
+void putinpokers();//调用后完成初始玩家牌堆的分配，以及牌堆存放区的设置，end的初始值
+void outpokers1();//玩家一的出牌函数
+void outpokers2();//玩家二的出牌函数
+void showpokers(int poker[51], bool a);//调用图形库的图片
+int main()
+{
+	cout << "欢迎来到小猫钓鱼"<<endl;
+	int x = 0;
+	player a;
+	while (x != 1)
+	{
+		cout << "1.进入游戏   2.查看玩家数据  3.查看游戏规则" << endl;
+		cin >> x;
+		if (x == 2)
+			a.player_data();
+		else if (x == 3)
+			cout << "小猫钓鱼的规则很简单，两位玩家各拿一半牌，依次出牌，若出现与前面出的牌相同的牌，则出牌的玩家可以吃掉两张牌及之间的牌放入自己的牌堆底，直到一方的牌被吃完为止" << endl;
+	}
+	int game = 1;
+	while (game == 1)
+	{
+		PlaySound(TEXT("C:\\picture.wq\\bgm.wav"), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
+		int choice=0;
+		while(choice!=1)
+		{
+			cout << " 1直接开始  2查看玩家数据  3了解游戏攻略 " << endl;
+			cin >> choice;
+			if (choice == 2)
+				a.player_data();
+			else if (choice == 3)
+				cout << "合理记忆你吃过的牌对再决定洗牌顺序有助于最终取胜" << endl;
+		}
+		putinpokers();
+		while ((end1 != -1) && (end2 != -1))
+		{
+			int choice_2 = 0;
+			cout << "玩家出牌回合" << endl;
+			int choice_1 = 3;//每一个循环中玩家的出牌，具体的内容会在控制台中展示
+			cout << "请选择：1.输入1直接出牌 ，2：输入2先洗牌再出牌" << endl;
+			while (choice_1 != 1 && choice_1 != 2)
+			{
+				cin >> choice_1;
+				if (choice_1 != 1 && choice_1 != 2)
+					cout << "我寻思着你也妹输1,2啊:";
+			}
+			int _choice = end1;
+			switch (choice_1)
+			{
+			case 1: showpokers(poker1, 1);
+				outpokers1();
+				break;
+			case 2:washpokers(poker1, end1);
+				showpokers(poker1, 1);
+				outpokers1();
+				break;
+			}
+			Sleep(1000);
+			cout << "你还剩" << end1 + 1 << "张牌" << endl;//玩家的出牌过程结束
+			cout << "电脑出牌" << endl;//改1
+			//Sleep(2000);
+			//showpokers(poker2, 0);
+			//outpokers2();//改1
+			//随机生成1或2
+			if (_choice < end1)
+				choice_2 = 2;
+			else
+				choice_2 = 1;
+			switch (choice_2)
+			{
+			case 1: cout << "电脑选择直接出牌"<<endl;
+				showpokers(poker2, 0);
+				outpokers2();
+				break;
+			case 2:
+				cout << "电脑选择先洗牌再出牌"<<endl;
+					washpokers(poker2, end2);
+				showpokers(poker2, 0);
+				outpokers2();
+				break;
+			}Sleep(2000);
+		}
+		if (end1 == -1)
+		{
+			cout << "你输了";
+			a.player_updata(0);
+		}
+		else if (end2 == -1)
+		{
+			cout << "你赢了";
+			a.player_updata(1);
+		}
+		cout << "1.下一局  2.退出" << endl;
+		int ls = 2;
+		cin >> ls;
+		game = ls;
+	}
+}
+void putinpokers()//已正确执行
+{       //牌堆的赋值
+	for (int i = 0; i <= 51; i++)//牌堆的定义
+	{
+		pokerbase[i] = i + 1;
 
-# Precompiled Headers
-*.gch
-*.pch
+	}
+	//给数组一的前26个数赋1到52的数值，给后26个数赋为0.
+	srand(time(NULL));
+	for (int m = 0; m <= 25;)//将一半牌随机分出来
+	{
+		int b = 1;
+		int a = rand() % 51;//0到51的随机数
+		for (int k = 0; k <= 25; k++)
+		{
+			if (poker1[k] == (a + 1))
+			{
+				b = 0;
+				break;
+			}
+		}
+		if (b)
+		{
+			poker1[m] = (a + 1);
+			m++;
+		}
+	}
+	for (int m = 26; m <= 51; m++)
+	{
+		poker1[m] = 0;
+	}
+	//给另一个牌堆放入剩余的牌
+	for (int a = 0, m = 0; m <= 51; m++)
+	{
+		int k = 1;
+		for (int n = 0; n <= 25; n++)
+		{
+			if (pokerbase[m] == poker1[n])
+			{
+				k = 0;
+				break;
+			}
+		}
+		if (k)
+		{
+			poker2[a] = pokerbase[m];
+			a++;
+		}
+	}
+	for (int m = 26; m <= 51; m++)
+	{
+		poker2[m] = 0;
+	}
+	//将牌堆置零
+	for (int a = 0; a <= 51; a++)
+	{
+		pokerbase[a] = 0;
+	}
+	end1 = 25, end2 = 25, end3 = -1;//分别为玩家1的牌堆，玩家2的牌堆，底部牌堆。
+}
+void washpokers(int poker_[51], int end_)//a是end起指针作用
+{
+	int tem[51];
+	srand(time(NULL));
+	for (int i = 0; i <= end_;i++)
+	{
+		int n = 1;
+		int b = (rand() % end1);
+			tem[i] = poker_[b];
+	}
+	for (int i = 0; i <= end1; i++)
+	{
+		poker_[i] = tem[i];
+	}
+}
+void outpokers1()
+{
+	int n = 1;//n=1则不能从牌堆吃牌
+	int m;
+	for (int i = 0; i <= end3; i++)
+	{
+		if (((poker1[0] + 3) / 4) == ((pokerbase[i] + 3) / 4))
+		{
+			n = 0, m = i;
+		}
+	}
+	if (n == 0)//可以吃牌
+	{
+		pokerbase[end3 + 1] = poker1[0];
+		for (int a = 0; a <= end1 - 1; a++)
+		{
+			poker1[a] = poker1[a + 1];
+		}
+		for (int a = 0; a <= end3 - m + 1; a++)
+		{
+			poker1[a + end1] = pokerbase[m + a];
+		}
+		end1 = end1 + end3 - m + 1;
+		end3 = m - 1;
+		
+	}
+	else //不能吃牌
+	{
+		end3 = end3 + 1;
+		pokerbase[end3] = poker1[0];
+		for (int a = 0; a <= end1 - 1; a++)
+		{
+			poker1[a] = poker1[a + 1];
+		}
+		end1 = end1 - 1;
+	}
+}
+void outpokers2()
+{
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+	int n = 1;//n=1则不能从牌堆吃牌
+	int m;
+	for (int i = 0; i <= 51; i++)
+	{
+		if (((poker2[0] + 3) / 4) == ((pokerbase[i] + 3) / 4))
+		{
+			n = 0, m = i;
+		}
+	}
+	if (n == 0)//可以吃牌
+	{
+		pokerbase[end3 + 1] = poker2[0];
+		for (int a = 0; a <= end2 - 1; a++)
+		{
+			poker2[a] = poker2[a + 1];
+		}
+		for (int a = 0; a <= end3 - m + 1; a++)
+		{
+			poker2[a + end2] = pokerbase[m + a];
+		}
+		end2 = end2 + end3 - m + 1;
+		end3 = m - 1;
+	}
+	else//不能吃牌
+	{
+		end3 = end3 + 1;
+		pokerbase[end3] = poker2[0];
+		for (int a = 0; a <= end2 - 1; a++)
+		{
+			poker2[a] = poker2[a + 1];
+		}
+		end2 = end2 - 1;
+	}
+}
+void showpokers(int poker[51], bool a)//如果a=0，则为玩家的牌，a为其他数值时输出电脑的牌
+{
+	IMAGE pokerpicture[51];
+	loadimage(&pokerpicture[0], _T("C:\\picture.wq\\1.jpg"), 80, 100);
+	loadimage(&pokerpicture[1], _T("C:\\picture.wq\\2.jpg"), 80, 100);
+	loadimage(&pokerpicture[2], _T("C:\\picture.wq\\3.jpg"), 80, 100);
+	loadimage(&pokerpicture[3], _T("C:\\picture.wq\\4.jpg"), 80, 100);
+	loadimage(&pokerpicture[4], _T("C:\\picture.wq\\5.jpg"), 80, 100);
+	loadimage(&pokerpicture[5], _T("C:\\picture.wq\\6.jpg"), 80, 100);
+	loadimage(&pokerpicture[6], _T("C:\\picture.wq\\7.jpg"), 80, 100);
+	loadimage(&pokerpicture[7], _T("C:\\picture.wq\\8.jpg"), 80, 100);
+	loadimage(&pokerpicture[8], _T("C:\\picture.wq\\9.jpg"), 80, 100);
+	loadimage(&pokerpicture[9], _T("C:\\picture.wq\\10.jpg"), 80, 100);
+	loadimage(&pokerpicture[10], _T("C:\\picture.wq\\11.jpg"), 80, 100);
+	loadimage(&pokerpicture[11], _T("C:\\picture.wq\\12.jpg"), 80, 100);
+	loadimage(&pokerpicture[12], _T("C:\\picture.wq\\13.jpg"), 80, 100);
+	loadimage(&pokerpicture[13], _T("C:\\picture.wq\\14.jpg"), 80, 100);
+	loadimage(&pokerpicture[14], _T("C:\\picture.wq\\15.jpg"), 80, 100);
+	loadimage(&pokerpicture[15], _T("C:\\picture.wq\\16.jpg"), 80, 100);
+	loadimage(&pokerpicture[16], _T("C:\\picture.wq\\17.jpg"), 80, 100);
+	loadimage(&pokerpicture[17], _T("C:\\picture.wq\\18.jpg"), 80, 100);
+	loadimage(&pokerpicture[18], _T("C:\\picture.wq\\19.jpg"), 80, 100);
+	loadimage(&pokerpicture[19], _T("C:\\picture.wq\\20.jpg"), 80, 100);
+	loadimage(&pokerpicture[20], _T("C:\\picture.wq\\21.jpg"), 80, 100);
+	loadimage(&pokerpicture[21], _T("C:\\picture.wq\\22.jpg"), 80, 100);
+	loadimage(&pokerpicture[22], _T("C:\\picture.wq\\23.jpg"), 80, 100);
+	loadimage(&pokerpicture[23], _T("C:\\picture.wq\\24.jpg"), 80, 100);
+	loadimage(&pokerpicture[24], _T("C:\\picture.wq\\25.jpg"), 80, 100);
+	loadimage(&pokerpicture[25], _T("C:\\picture.wq\\26.jpg"), 80, 100);
+	loadimage(&pokerpicture[26], _T("C:\\picture.wq\\27.jpg"), 80, 100);
+	loadimage(&pokerpicture[27], _T("C:\\picture.wq\\28.jpg"), 80, 100);
+	loadimage(&pokerpicture[28], _T("C:\\picture.wq\\29.jpg"), 80, 100);
+	loadimage(&pokerpicture[29], _T("C:\\picture.wq\\30.jpg"), 80, 100);
+	loadimage(&pokerpicture[30], _T("C:\\picture.wq\\31.jpg"), 80, 100);
+	loadimage(&pokerpicture[31], _T("C:\\picture.wq\\32.jpg"), 80, 100);
+	loadimage(&pokerpicture[32], _T("C:\\picture.wq\\33.jpg"), 80, 100);
+	loadimage(&pokerpicture[33], _T("C:\\picture.wq\\34.jpg"), 80, 100);
+	loadimage(&pokerpicture[34], _T("C:\\picture.wq\\35.jpg"), 80, 100);
+	loadimage(&pokerpicture[35], _T("C:\\picture.wq\\36.jpg"), 80, 100);
+	loadimage(&pokerpicture[36], _T("C:\\picture.wq\\37.jpg"), 80, 100);
+	loadimage(&pokerpicture[37], _T("C:\\picture.wq\\38.jpg"), 80, 100);
+	loadimage(&pokerpicture[38], _T("C:\\picture.wq\\39.jpg"), 80, 100);
+	loadimage(&pokerpicture[39], _T("C:\\picture.wq\\40.jpg"), 80, 100);
+	loadimage(&pokerpicture[40], _T("C:\\picture.wq\\41.jpg"), 80, 100);
+	loadimage(&pokerpicture[41], _T("C:\\picture.wq\\42.jpg"), 80, 100);
+	loadimage(&pokerpicture[42], _T("C:\\picture.wq\\43.jpg"), 80, 100);
+	loadimage(&pokerpicture[43], _T("C:\\picture.wq\\44.jpg"), 80, 100);
+	loadimage(&pokerpicture[44], _T("C:\\picture.wq\\45.jpg"), 80, 100);
+	loadimage(&pokerpicture[45], _T("C:\\picture.wq\\46.jpg"), 80, 100);
+	loadimage(&pokerpicture[46], _T("C:\\picture.wq\\47.jpg"), 80, 100);
+	loadimage(&pokerpicture[47], _T("C:\\picture.wq\\48.jpg"), 80, 100);
+	loadimage(&pokerpicture[48], _T("C:\\picture.wq\\49.jpg"), 80, 100);
+	loadimage(&pokerpicture[49], _T("C:\\picture.wq\\50.jpg"), 80, 100);
+	loadimage(&pokerpicture[50], _T("C:\\picture.wq\\51.jpg"), 80, 100);
+	loadimage(&pokerpicture[51], _T("C:\\picture.wq\\52.jpg"), 80, 100);//将扑克牌图片定义入image数组中
+	IMAGE backgrounding;
+	loadimage(&backgrounding, _T("C:\\picture.wq\\53.jpg"));
+	int width = backgrounding.getwidth();
+	int height = backgrounding.getheight();//获取长和宽
+	initgraph(width, height, SHOWCONSOLE);//初始化背景板大小,并且用SHOWCONSOLE使图形的界面和控制台共存
+	putimage(0, 0, &backgrounding);//在窗口上绘制背景图片
+	for (int i = 0; i <= end3; i++)
+	{
+		int y = 20 * i;
+		int b = pokerbase[i] - 1;
+		putimage(80, y + 80, &pokerpicture[b]);
+	}
+	int b = poker[0] - 1;
+	if (a)
+	{
+		putimage(480, 100, &pokerpicture[b]);
+	}
+	else
+	{
+		putimage(480, 400, &pokerpicture[b]);
+	}
+}
